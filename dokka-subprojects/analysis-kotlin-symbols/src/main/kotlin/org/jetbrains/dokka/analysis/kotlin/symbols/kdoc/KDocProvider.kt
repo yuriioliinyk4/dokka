@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiRecursiveElementWalkingVisitor
 import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.dokka.DokkaConfiguration.DokkaSourceSet
 import org.jetbrains.dokka.analysis.java.parsers.JavadocParser
 import org.jetbrains.dokka.model.doc.DocumentationNode
 import org.jetbrains.dokka.utilities.DokkaLogger
@@ -27,11 +28,12 @@ import org.jetbrains.kotlin.util.capitalizeDecapitalize.toLowerCaseAsciiOnly
 
 internal fun KaSession.getJavaDocDocumentationFrom(
     symbol: KaSymbol,
-    javadocParser: JavadocParser
+    javadocParser: JavadocParser,
+    sourceSet: DokkaSourceSet
 ): DocumentationNode? {
     if (symbol.origin == KaSymbolOrigin.JAVA_SOURCE) {
         return (symbol.psi as? PsiNamedElement)?.let {
-            javadocParser.parseDocumentation(it)
+            javadocParser.parseDocumentation(it, sourceSet)
         }
     } else if (symbol.origin == KaSymbolOrigin.SOURCE && symbol is KaCallableSymbol) {
         // TODO https://youtrack.jetbrains.com/issue/KT-70326/Analysis-API-Inconsistent-allOverriddenSymbols-and-directlyOverriddenSymbols-for-an-intersection-symbol
@@ -41,7 +43,7 @@ internal fun KaSession.getJavaDocDocumentationFrom(
         allOverriddenSymbolsWithIntersection.forEach { overrider ->
             if (overrider.origin == KaSymbolOrigin.JAVA_SOURCE)
                 return@getJavaDocDocumentationFrom (overrider.psi as? PsiNamedElement)?.let {
-                    javadocParser.parseDocumentation(it)
+                    javadocParser.parseDocumentation(it, sourceSet)
                 }
         }
     }
